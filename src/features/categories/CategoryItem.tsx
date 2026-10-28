@@ -1,8 +1,18 @@
-import {useEffect, useRef, useState} from 'react'
+import {useState} from 'react'
 import type { Category } from './types'
-import {Trash} from "lucide-react";
+import {PencilSparkles, Trash} from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+import {Input} from "@/components/ui/input.tsx";
+import {Field, FieldDescription, FieldGroup, FieldLabel} from "@/components/ui/field.tsx";
+import {
+    Drawer, DrawerClose,
+    DrawerContent,
+    DrawerDescription, DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger
+} from "@/components/ui/drawer.tsx";
 
 interface CategoryItemProps {
     category: Category
@@ -15,58 +25,65 @@ export function CategoryItem({
                                  onRemove,
                                  onUpdate,
                              }: CategoryItemProps) {
-    const [editedName, setEditedName] = useState<string | null>(null)
+    const [editedName, setEditedName] = useState(category.name)
+    const [openDrawer, setOpenDrawer] = useState(false)
     const [openPopOver, setOpenPopOver] = useState(false)
-    const inputRef = useRef<HTMLInputElement>(null)
-    const isEditing = editedName !== null
-    useEffect(() => {
-        if (isEditing) {
-            inputRef.current?.focus()
-        }
-    }, [isEditing])
 
-    function handleSave(){
-        if (editedName === null) return
+    function handleOpenDrawer(open: boolean) {
+        if (open) {
+            setEditedName(category.name)
+        }
+        setOpenDrawer(open)
+    }
+
+    function handleSave() {
         const trimmedName = editedName.trim()
-        if (!trimmedName.length) return;
-        onUpdate(category.id,trimmedName)
-        setEditedName(null)
+
+        if (!trimmedName) return
+
+        onUpdate(category.id, trimmedName)
+
+        setOpenDrawer(false)
     }
 
     return (
         <>
-            <input
-                ref={inputRef}
-                type="text"
-                value={editedName ?? category.name}
-                readOnly={editedName === null}
-                onChange={(event) => setEditedName(event.target.value)}
-            />
-            <button
-                type="button"
-                onClick={() => setEditedName(category.name)}
-                className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50 ml-auto"
-            >
-                Изменить
-            </button>
-            {isEditing &&
-                <>
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50"
-                    >
-                        Сохранить
-                    </button>
-                    <button
-                        type="button"
-                        onClick={()=>setEditedName(null)}
-                        className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50"
-                    >
-                        Отменить
-                    </button>
-                </>
-            }
+            <div className="mr-auto">{category.name}</div>
+
+            <Drawer
+                open={openDrawer}
+                onOpenChange={handleOpenDrawer}
+                swipeDirection="right">
+                <DrawerTrigger render={<Button variant="outline" />}>
+                    <PencilSparkles className="size-4"/>
+                </DrawerTrigger>
+                <DrawerContent>
+                    <DrawerHeader>
+                        <DrawerTitle>Изменить категорию?</DrawerTitle>
+                        <DrawerDescription>Какое-то описание</DrawerDescription>
+                    </DrawerHeader>
+                    <div className="p-4">
+                        <FieldGroup>
+                            <Field>
+                                <FieldLabel htmlFor="fieldgroup-name">Введите имя</FieldLabel>
+                                <Input
+                                    id="fieldgroup-name"
+                                    placeholder="Введите новое имя категории"
+                                    value={editedName}
+                                    onChange={(event) => setEditedName(event.target.value)}/>
+                                <FieldDescription>
+                                    Обновите имя категории
+                                </FieldDescription>
+                            </Field>
+                        </FieldGroup>
+                    </div>
+                    <DrawerFooter>
+                        <Button onClick={handleSave}>Save</Button>
+                        <DrawerClose render={<Button variant="outline" />}>Cancel</DrawerClose>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
+
 
             <Popover open={openPopOver} onOpenChange={setOpenPopOver}>
                 <PopoverTrigger
@@ -91,25 +108,25 @@ export function CategoryItem({
                         Удалить категорию?
                     </div>
                     <div
-                    className="flex justify-between items-center space-x-2">
-                    <Button
-                        variant="ghost"
-                        size="lg"
-                        aria-label="Удалить задачу"
-                        className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50 cursor-pointer"
-                        onClick={()=>onRemove(category.id)}
-                    >
-                        Удалить
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="lg"
-                        aria-label="Удалить задачу"
-                        className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50 cursor-pointer"
-                        onClick={()=>setOpenPopOver(false)}
-                    >
-                       Отменить
-                    </Button>
+                        className="flex justify-between items-center space-x-2">
+                        <Button
+                            variant="ghost"
+                            size="lg"
+                            aria-label="Удалить задачу"
+                            className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50 cursor-pointer"
+                            onClick={()=>onRemove(category.id)}
+                        >
+                            Удалить
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="lg"
+                            aria-label="Удалить задачу"
+                            className="rounded-lg px-3 py-1 text-blue-600 hover:bg-blue-50 cursor-pointer"
+                            onClick={()=>setOpenPopOver(false)}
+                        >
+                            Отменить
+                        </Button>
                     </div>
                 </PopoverContent>
             </Popover>
